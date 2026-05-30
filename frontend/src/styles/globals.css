@@ -1,0 +1,252 @@
+/* ── Tailwind directives ──────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS custom properties (design tokens) ───────────────────────────────── */
+@layer base {
+  :root {
+    /* Brand */
+    --color-brand:          #9b6dff;
+    --color-brand-dim:      #5c35aa;
+    --color-brand-subtle:   #2a1f40;
+
+    /* Surfaces */
+    --color-bg-base:        #0a0a0e;
+    --color-bg-card:        #14121a;
+    --color-bg-input:       #0f0f13;
+
+    /* Borders */
+    --color-border:         #1e1e2a;
+    --color-border-hover:   #2a2a38;
+    --color-border-brand:   #3d2060;
+
+    /* Text */
+    --color-text-primary:   #e8e4f0;
+    --color-text-secondary: #aaa;
+    --color-text-muted:     #666;
+    --color-text-hint:      #444;
+
+    /* Accents */
+    --color-blue:           #5bbdff;
+    --color-orange:         #ff9b5b;
+    --color-green:          #5bff9b;
+    --color-pink:           #ff5b9b;
+    --color-red:            #ff5b5b;
+    --color-yellow:         #ffdb5b;
+
+    /* Sidebar */
+    --sidebar-width:        220px;
+  }
+}
+
+/* ── Base element resets & global styles ─────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  /* Heading font */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    color: var(--color-text-primary);
+    line-height: 1.3;
+  }
+
+  /* Focus ring — accessible but unobtrusive */
+  *:focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Remove default button styles — components handle their own styling */
+  button {
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  /* Smooth scrollbar */
+  ::-webkit-scrollbar       { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: #2a2a38;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: #3d2060; }
+
+  /* Input base styles */
+  input, textarea, select {
+    font-family: inherit;
+    font-size: inherit;
+    background: var(--color-bg-input);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-hover);
+    border-radius: 8px;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-hint);
+  }
+
+  /* Selection color */
+  ::selection {
+    background: rgba(155, 109, 255, 0.25);
+    color: var(--color-text-primary);
+  }
+
+  /* Remove number input arrows */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+/* ── Reusable component classes ──────────────────────────────────────────── */
+@layer components {
+
+  /* Card */
+  .card {
+    @apply bg-[#14121a] border border-[#1e1e2a] rounded-xl p-4;
+    transition: border-color 0.15s ease;
+  }
+  .card:hover { border-color: #2a2a38; }
+  .card-brand  { @apply border-[#3d2060]; }
+
+  /* Input */
+  .input {
+    @apply w-full bg-[#0f0f13] border border-[#2a2a38] rounded-lg
+           px-3 py-2 text-[#ccc] text-sm outline-none
+           focus:border-[#5c35aa] transition-colors duration-150;
+  }
+
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2
+           rounded-lg px-4 py-2 text-sm font-medium
+           border transition-all duration-150 cursor-pointer;
+  }
+  .btn-primary {
+    @apply btn bg-[#5c35aa] border-[#5c35aa] text-white
+           hover:bg-[#7c4dff] hover:border-[#7c4dff]
+           active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply btn bg-transparent border-[#2a2a38] text-[#888]
+           hover:border-[#3d2060] hover:text-[#ccc]
+           active:scale-[0.98];
+  }
+  .btn-danger {
+    @apply btn bg-transparent border-[#3d1515] text-[#ff5b5b]
+           hover:bg-[#200a0a] active:scale-[0.98];
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-block text-[11px] font-medium px-2 py-0.5 rounded;
+  }
+
+  /* Section heading */
+  .section-label {
+    @apply text-[11px] uppercase tracking-widest text-[#666] mb-3;
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-2.5 px-3 py-2 rounded-lg
+           text-[13px] text-[#666] border-l-2 border-transparent
+           transition-all duration-150 w-full text-left cursor-pointer
+           hover:text-[#aaa];
+  }
+  .nav-item.active {
+    @apply bg-[#1a1428] text-[#c4a8ff] border-l-[#9b6dff];
+  }
+
+  /* Chat bubbles */
+  .bubble-user {
+    @apply max-w-[80%] px-3.5 py-2.5 rounded-[12px_12px_2px_12px]
+           bg-[#2a1f40] border border-[#3d2060]
+           text-[#ddd] text-sm leading-relaxed;
+  }
+  .bubble-ai {
+    @apply max-w-[80%] px-3.5 py-2.5 rounded-[2px_12px_12px_12px]
+           bg-[#14121a] border border-[#1e1e2a]
+           text-[#ddd] text-sm leading-relaxed whitespace-pre-wrap;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    @apply h-1.5 rounded-full bg-[#1e1e2a] overflow-hidden;
+  }
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-500;
+  }
+
+  /* Tag / pill */
+  .tag {
+    @apply text-[11px] rounded px-2 py-0.5 font-medium;
+  }
+}
+
+/* ── Utility overrides ───────────────────────────────────────────────────── */
+@layer utilities {
+
+  /* Scrollable container without showing scrollbar */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  /* Thin styled scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #2a2a38 transparent;
+  }
+
+  /* Text truncation helpers */
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Glow effect for brand elements */
+  .glow-brand {
+    box-shadow: 0 0 20px rgba(155, 109, 255, 0.2);
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, #9b6dff 0%, #5bbdff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Full-height page layout */
+  .page-layout {
+    @apply flex min-h-screen bg-[#0a0a0e];
+  }
+
+  .page-main {
+    @apply flex-1 p-8 overflow-y-auto;
+  }
+}
