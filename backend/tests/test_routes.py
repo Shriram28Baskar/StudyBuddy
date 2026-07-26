@@ -104,11 +104,13 @@ def test_upload_txt(mock_ingest):
 
 
 @patch("routes.documents.collection_exists", return_value=True)
-@patch("routes.documents.query_document",    new_callable=AsyncMock)
+@patch("routes.documents.embed_query",       return_value=[0.1] * 384)
+@patch("routes.documents.query_collection")
+@patch("routes.documents.query_image_collection", return_value=[])
 @patch("routes.documents.complete",          new_callable=AsyncMock)
-def test_query_document(mock_complete, mock_query, mock_exists):
-    mock_query.return_value   = ["Chunk 1 relevant text.", "Chunk 2 relevant text."]
-    mock_complete.return_value = "Based on the document, the answer is X."
+def test_query_document(mock_complete, mock_img_query, mock_txt_query, mock_embed, mock_exists):
+    mock_txt_query.return_value = [("Chunk 1 relevant text.", {"page_num": 1}, 0.85), ("Chunk 2 relevant text.", {"page_num": 2}, 0.80)]
+    mock_complete.return_value  = "Based on the document, the answer is X."
     res = client.post("/documents/query", json={
         "question":   "What is the main topic?",
         "collection": "abc123",
