@@ -51,6 +51,7 @@ backend/serviceAccountKey.json
 # Node.js / React / Vite
 # ==================================================
 frontend/node_modules/
+backend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/.next/

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import useAppStore, {
   selectDocuments,
   selectRoadmap,
-  selectCareer,
+  selectStudyPlan,
   selectMindmap,
 } from '@/store/useAppStore'
 
@@ -11,7 +11,7 @@ const NAV = [
   { to: '/documents', icon: '⊡', label: 'Doc Q&A',       desc: 'Upload & query documents',     color: '#5bbdff' },
   { to: '/mindmap',   icon: '◈', label: 'Mind Map',      desc: 'Visualise any concept',        color: '#ff9b5b' },
   { to: '/roadmap',   icon: '⟶', label: 'Roadmap',       desc: 'Map your learning path',       color: '#ff5b9b' },
-  { to: '/career',    icon: '◆', label: 'Career AI',     desc: 'Discover your best-fit roles', color: '#ffdb5b' },
+  { to: '/quiz-battle',icon: '⚔', label: 'Quiz Battle',  desc: 'Challenge friends or AI',      color: '#ffdb5b' },
   { to: '/progress',  icon: '▲', label: 'Progress',      desc: 'Track your scores',            color: '#c4a8ff' },
 ]
 
@@ -20,14 +20,14 @@ const TIPS = [
   'Upload your lecture notes to Doc Q&A and quiz yourself before an exam.',
   'Generate a roadmap for any skill you want to learn — even non-academic ones.',
   'Log your test scores regularly to spot weak areas early.',
-  'Use Career AI to discover roles that match your current skillset.',
+  'Challenge yourself in Quiz Battle to test your knowledge against AI or friends.',
 ]
 
 export default function Dashboard() {
   const navigate    = useNavigate()
   const docs        = useAppStore(selectDocuments)
   const roadmap     = useAppStore(selectRoadmap)
-  const career      = useAppStore(selectCareer)
+  const studyPlan   = useAppStore(selectStudyPlan)
   const mindmap     = useAppStore(selectMindmap)
   const displayName = useAppStore((s) => s.auth.user?.displayName ?? 'Student')
 
@@ -36,14 +36,14 @@ export default function Dashboard() {
   const stats = [
     { label: 'Docs Indexed',   value: docs.length,                   icon: '⊡', color: '#5bbdff', to: '/documents' },
     { label: 'Roadmap',        value: roadmap ? 'Active' : 'None',   icon: '⟶', color: '#ff5b9b', to: '/roadmap'   },
-    { label: 'Career Matches', value: career?.roles?.length ?? 0,    icon: '◆', color: '#ffdb5b', to: '/career'    },
+    { label: 'Study Plan',     value: studyPlan ? 'Active' : 'None', icon: '◷', color: '#9b6dff', to: '/studyplan' },
     { label: 'Mind Map',       value: mindmap ? mindmap.topic : '-', icon: '◈', color: '#ff9b5b', to: '/mindmap'   },
   ]
 
   const activity = [
-    roadmap  && { icon: '⟶', color: '#ff5b9b', text: `Roadmap: ${roadmap.goal}`,          sub: roadmap.generatedAt  ? new Date(roadmap.generatedAt).toLocaleDateString()  : '' },
-    career   && { icon: '◆', color: '#ffdb5b', text: `${career.roles?.length ?? 0} career roles matched`, sub: career.generatedAt   ? new Date(career.generatedAt).toLocaleDateString()   : '' },
-    mindmap  && { icon: '◈', color: '#ff9b5b', text: `Mind map: ${mindmap.topic}`,         sub: mindmap.generatedAt  ? new Date(mindmap.generatedAt).toLocaleDateString()  : '' },
+    roadmap   && { icon: '⟶', color: '#ff5b9b', text: `Roadmap: ${roadmap.goal}`,          sub: roadmap.generatedAt  ? new Date(roadmap.generatedAt).toLocaleDateString()  : '' },
+    studyPlan && { icon: '◷', color: '#9b6dff', text: `Study Plan: ${studyPlan.summary ? (studyPlan.summary.length > 30 ? studyPlan.summary.slice(0, 30) + '...' : studyPlan.summary) : 'Active Plan'}`, sub: studyPlan.generatedAt ? new Date(studyPlan.generatedAt).toLocaleDateString() : '' },
+    mindmap   && { icon: '◈', color: '#ff9b5b', text: `Mind map: ${mindmap.topic}`,         sub: mindmap.generatedAt  ? new Date(mindmap.generatedAt).toLocaleDateString()  : '' },
     ...docs.slice(0, 2).map(d => ({ icon: '⊡', color: '#5bbdff', text: `Uploaded: ${d.filename}`, sub: new Date(d.uploadedAt).toLocaleDateString() })),
   ].filter(Boolean).slice(0, 5)
 

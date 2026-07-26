@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { PlanView } from '@/pages/StudyPlanAI'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+import { studyPlanAIAPI } from '@/services/api'
 
 function DetailSkeleton() {
   return (
@@ -24,9 +23,8 @@ export default function StudyPlanDetail() {
 
   useEffect(() => {
     if (!id) return
-    fetch(`${API_BASE}/generate-study-plan/${id}`)
-      .then(r => { if (!r.ok) throw new Error('Plan not found'); return r.json() })
-      .then(d => setPlan(d))
+    studyPlanAIAPI.get(id)
+      .then(({ data }) => setPlan(data))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [id])

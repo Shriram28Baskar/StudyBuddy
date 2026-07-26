@@ -1,50 +1,62 @@
 import { useEffect, lazy, Suspense, useState, startTransition } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import Sidebar from '@/components/layout/Sidebar'
-import TopBar  from '@/components/layout/TopBar'
-import Spinner from '@/components/ui/Spinner'
-import ErrorBoundary from "@/components/ErrorBoundary"
-import useAppStore from '@/store/useAppStore'
+import Sidebar       from '@/components/layout/Sidebar'
+import TopBar        from '@/components/layout/TopBar'
+import Spinner       from '@/components/ui/Spinner'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import useAppStore   from '@/store/useAppStore'
 import { onAuthChange } from '@/services/auth'
 
-// ── Lazy page imports ─────────────────────────────────────────────────
-const Login            = lazy(() => import('@/pages/Login'))
-const Dashboard        = lazy(() => import('@/pages/Dashboard'))
-const Chat             = lazy(() => import('@/pages/Chat'))
-const Documents        = lazy(() => import('@/pages/Documents'))
-const MindMap          = lazy(() => import('@/pages/MindMap'))
-const Roadmap          = lazy(() => import('@/pages/Roadmap'))
-const Career           = lazy(() => import('@/pages/Career'))
-const ProgressDashboard = lazy(() => import('@/pages/ProgressDashboard'))
-const StudyPlanAI      = lazy(() => import('@/pages/StudyPlanAI'))
-const StudyPlanHistory = lazy(() => import('@/pages/StudyPlanHistory'))
-const StudyPlanDetail  = lazy(() => import('@/pages/StudyPlanDetail'))
+// ---------------------------------------------------------------------------
+// Lazy page imports
+// ---------------------------------------------------------------------------
 
-// ── Enhanced splash loader with rotating messages ─────────────────────
+const Login             = lazy(() => import('@/pages/Login'))
+const Dashboard         = lazy(() => import('@/pages/Dashboard'))
+const Chat              = lazy(() => import('@/pages/Chat'))
+const Documents         = lazy(() => import('@/pages/Documents'))
+const ProgressDashboard = lazy(() => import('@/pages/ProgressDashboard'))
+const StudyPlanAI       = lazy(() => import('@/pages/StudyPlanAI'))
+const StudyPlanHistory  = lazy(() => import('@/pages/StudyPlanHistory'))
+const StudyPlanDetail   = lazy(() => import('@/pages/StudyPlanDetail'))
+const PYQsAnalyzer      = lazy(() => import('@/pages/PYQsAnalyzer'))
+const ScorePredictor    = lazy(() => import('@/pages/ScorePredictor'))
+const BurnoutDetector   = lazy(() => import('@/pages/BurnoutDetector'))
+const GapAnalysis       = lazy(() => import('@/pages/GapAnalysis'))
+const VoiceSolver       = lazy(() => import('@/pages/VoiceSolver'))
+const PhotoSolver       = lazy(() => import('@/pages/PhotoSolver'))
+const StudyRooms        = lazy(() => import('@/pages/StudyRooms'))
+const StudyRoom         = lazy(() => import('@/pages/StudyRoom'))
+const QuizBattle        = lazy(() => import('@/pages/QuizBattle'))
+const Community         = lazy(() => import('@/pages/Community'))
+const ClanDashboard     = lazy(() => import('@/pages/ClanDashboard'))
+
+// ---------------------------------------------------------------------------
+// Splash loader
+// ---------------------------------------------------------------------------
+
 const SPLASH_MESSAGES = [
   '🧠 Initializing AI Engine...',
   '⚡ Loading your personalized system...',
   '🔍 Scanning knowledge base...',
   '✨ Preparing your dashboard...',
-  '🚀 Almost there...'
+  '🚀 Almost there...',
 ]
 
 function SplashLoader() {
   const [messageIndex, setMessageIndex] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMessageIndex(prev => (prev + 1) % SPLASH_MESSAGES.length)
-    }, 1500)
+    const interval = setInterval(
+      () => setMessageIndex(prev => (prev + 1) % SPLASH_MESSAGES.length),
+      1500,
+    )
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      height: '100vh', background: '#0a0a0e', flexDirection: 'column', gap: 16,
-    }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0a0a0e', flexDirection: 'column', gap: 16 }}>
       <span style={{ fontSize: 28, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>
         Study<span style={{ color: '#7c3aed' }}>Buddy</span>
       </span>
@@ -56,7 +68,6 @@ function SplashLoader() {
   )
 }
 
-// ── Per-page loading fallback ─────────────────────────────────────────
 function PageLoader() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 400 }}>
@@ -68,22 +79,28 @@ function PageLoader() {
   )
 }
 
-// ── Protected route wrapper (allows demo mode) ────────────────────────
+// ---------------------------------------------------------------------------
+// Route guards
+// ---------------------------------------------------------------------------
+
 function ProtectedRoute({ children }) {
   const { auth, authLoading } = useAppStore()
   const location = useLocation()
-  const isDemo = new URLSearchParams(location.search).get('demo') === 'true'
+  const isDemo   = new URLSearchParams(location.search).get('demo') === 'true'
 
-  if (authLoading) return <SplashLoader />
-  if (!auth.isLoggedIn && !isDemo) return <Navigate to="/login" replace />
+  if (authLoading)                       return <SplashLoader />
+  if (!auth.isLoggedIn && !isDemo)       return <Navigate to="/login" replace />
   return children
 }
 
-// ── Global AI Assistant Button ────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Global AI assistant button
+// ---------------------------------------------------------------------------
+
 function AIAssistantButton() {
   const navigate = useNavigate()
   const location = useLocation()
-  const isDemo = new URLSearchParams(location.search).get('demo') === 'true'
+  const isDemo   = new URLSearchParams(location.search).get('demo') === 'true'
   const { auth } = useAppStore()
 
   if (!auth.isLoggedIn && !isDemo) return null
@@ -91,22 +108,7 @@ function AIAssistantButton() {
   return (
     <div
       onClick={() => startTransition(() => navigate('/chat'))}
-      style={{
-        position: 'fixed',
-        bottom: 20,
-        right: 20,
-        background: '#5c35aa',
-        borderRadius: '50%',
-        width: 50,
-        height: 50,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-        transition: 'all 0.2s',
-        zIndex: 1000,
-      }}
+      style={{ position: 'fixed', bottom: 20, right: 20, background: '#5c35aa', borderRadius: '50%', width: 50, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', transition: 'all 0.2s', zIndex: 1000 }}
       onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
       onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
     >
@@ -115,37 +117,29 @@ function AIAssistantButton() {
   )
 }
 
-// ── Demo Mode Banner ──────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Demo mode banner
+// ---------------------------------------------------------------------------
+
 function DemoBanner() {
   const location = useLocation()
-  const isDemo = new URLSearchParams(location.search).get('demo') === 'true'
-
+  const isDemo   = new URLSearchParams(location.search).get('demo') === 'true'
   if (!isDemo) return null
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      background: '#ff9b5b',
-      textAlign: 'center',
-      padding: '4px',
-      fontSize: '12px',
-      fontWeight: 'bold',
-      color: '#000',
-      zIndex: 2000,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-    }}>
+    <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', background: '#ff9b5b', textAlign: 'center', padding: '4px', fontSize: '12px', fontWeight: 'bold', color: '#000', zIndex: 2000, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
       ⚡ Demo Mode Active — Explore all features without logging in
     </div>
   )
 }
 
-// ── Main app layout (only rendered when authenticated or in demo mode) ─
+// ---------------------------------------------------------------------------
+// App layout + routes
+// ---------------------------------------------------------------------------
+
 function AppLayout() {
   const location = useLocation()
-  const isDemo = new URLSearchParams(location.search).get('demo') === 'true'
+  const isDemo   = new URLSearchParams(location.search).get('demo') === 'true'
 
   return (
     <>
@@ -156,30 +150,42 @@ function AppLayout() {
           <TopBar />
           <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
             <Suspense fallback={<PageLoader />}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Routes>
-                  <Route path="/"                    element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard"           element={<Dashboard />} />
-                  <Route path="/chat"                element={<Chat />} />
-                  <Route path="/documents"           element={<Documents />} />
-                  <Route path="/mindmap"             element={<MindMap />} />
-                  <Route path="/studyplan"           element={<StudyPlanAI />} />
-                  <Route path="/studyplan/history"   element={<StudyPlanHistory />} />
-                  <Route path="/studyplan/:id"       element={<StudyPlanDetail />} />
-                  <Route path="/roadmap"             element={<Roadmap />} />
-                  <Route path="/career"              element={<Career />} />
-                  <Route path="/progress"            element={<ProgressDashboard />} />
-                  <Route path="*"                    element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-              </motion.div>
-            </AnimatePresence>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={location.pathname}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Routes>
+                    <Route index element={<Navigate to="/dashboard" replace />} />
+                    <Route path="dashboard"          element={<Dashboard />} />
+                    <Route path="chat"               element={<Chat />} />
+                    <Route path="documents"          element={<Documents />} />
+                    <Route path="pyqs"               element={<PYQsAnalyzer />} />
+                    <Route path="gap-analysis"       element={<GapAnalysis />} />
+                    <Route path="voice-solver"       element={<VoiceSolver />} />
+                    <Route path="photo-solver"       element={<PhotoSolver />} />
+                    <Route path="progress"           element={<ProgressDashboard />} />
+                    <Route path="score-predictor"    element={<ScorePredictor />} />
+                    <Route path="burnout"            element={<BurnoutDetector />} />
+                    <Route path="study-rooms"        element={<StudyRooms />} />
+                    <Route path="quiz-battle"        element={<QuizBattle />} />
+                    <Route path="community"          element={<Community />} />
+                    <Route path="community/clan/:clanId" element={<ClanDashboard />} />
+
+                    <Route path="studyplan">
+                      <Route index             element={<StudyPlanAI />} />
+                      <Route path="history"    element={<StudyPlanHistory />} />
+                      <Route path="view/:id"   element={<StudyPlanDetail />} />
+                      <Route path=":id"        element={<LegacyPlanIdRedirect />} />
+                    </Route>
+
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </motion.div>
+              </AnimatePresence>
             </Suspense>
           </main>
         </div>
@@ -189,26 +195,27 @@ function AppLayout() {
   )
 }
 
-// ── Root component ────────────────────────────────────────────────────
+function LegacyPlanIdRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/studyplan/view/${id}`} replace />
+}
+
+// ---------------------------------------------------------------------------
+// Root component
+// ---------------------------------------------------------------------------
+
 export default function App() {
   const { setUser, clearAuth, setAuthLoading, authLoading } = useAppStore()
 
-  // ── Sync Firebase auth state → Zustand store ──────────────────────
-  // This is the single source of truth. Both Login.jsx and App.jsx now
-  // read from the same store, so they can never be out of sync.
   useEffect(() => {
-    const unsub = onAuthChange((firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser)
-      } else {
-        clearAuth()
-      }
+    const unsub = onAuthChange(firebaseUser => {
+      if (firebaseUser) setUser(firebaseUser)
+      else              clearAuth()
       setAuthLoading(false)
     })
     return unsub
   }, [setUser, clearAuth, setAuthLoading])
 
-  // Dismiss the HTML splash loader once auth resolves
   useEffect(() => {
     if (!authLoading) {
       if (typeof window.__hideLoader === 'function') {
@@ -226,15 +233,30 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-          {/* Public route */}
+          {/* Public */}
           <Route path="/login" element={<Suspense fallback={<SplashLoader />}><Login /></Suspense>} />
 
-          {/* All other routes are protected (demo mode bypasses auth) */}
-          <Route path="/*" element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          } />
+          {/* Study room – full-screen, outside normal sidebar layout */}
+          <Route
+            path="/study-rooms/:roomId"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<SplashLoader />}>
+                  <StudyRoom />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected — demo mode bypasses auth check */}
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

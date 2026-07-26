@@ -31,7 +31,6 @@ const useAppStore = create(
       auth: {
         user:        null,   // Firebase user object (uid, email, displayName, photoURL)
         isLoggedIn:  false,
-        groqApiKey:  import.meta.env.VITE_GROQ_API_KEY ?? '',
       },
 
       // Separate from auth so it doesn't get persisted accidentally
@@ -48,10 +47,7 @@ const useAppStore = create(
           },
         })),
 
-      setGroqApiKey: (key) =>
-        set((state) => ({
-          auth: { ...state.auth, groqApiKey: key },
-        })),
+
 
       clearAuth: () =>
         set((state) => ({
@@ -132,13 +128,20 @@ const useAppStore = create(
       // re-query them without re-uploading across page reloads.
       documents: [],      // [{ docId, filename, chunkCount, uploadedAt }]
 
-      addDocument: ({ docId, filename, chunkCount }) =>
+      addDocument: ({ docId, filename, chunkCount, topics = [] }) =>
         set((state) => ({
           documents: [
-            { docId, filename, chunkCount, uploadedAt: now() },
+            { docId, filename, chunkCount, topics, uploadedAt: now() },
             // Deduplicate by docId in case of re-upload
             ...state.documents.filter((d) => d.docId !== docId),
           ].slice(0, 20),   // keep at most 20 recent docs
+        })),
+
+      setDocumentTopics: (docId, topics) =>
+        set((state) => ({
+          documents: state.documents.map((d) =>
+            d.docId === docId ? { ...d, topics } : d
+          ),
         })),
 
       removeDocument: (docId) =>
@@ -186,7 +189,6 @@ const useAppStore = create(
           auth: {
             user:       null,
             isLoggedIn: false,
-            groqApiKey: get().auth.groqApiKey,
           },
           authLoading: false,
           ui: {
@@ -211,7 +213,6 @@ const useAppStore = create(
       partialize: (state) => ({
         auth: {
           // Never persist the full user object — re-hydrate from Firebase on load
-          // groqApiKey is NOT persisted — always read fresh from .env.local
         },
         preferences: state.preferences,
         documents:   state.documents,
@@ -225,7 +226,6 @@ export default useAppStore
 // ── Typed selectors (avoids selector recreation on every render) ──────
 export const selectUser         = (s) => s.auth.user
 export const selectIsLoggedIn   = (s) => s.auth.isLoggedIn
-export const selectGroqApiKey   = (s) => s.auth.groqApiKey
 export const selectPreferences  = (s) => s.preferences
 export const selectSubject      = (s) => s.preferences.subject
 export const selectLevel        = (s) => s.preferences.level

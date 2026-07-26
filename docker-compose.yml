@@ -1,32 +1,33 @@
-version: "3.9"
+
 
 services:
   backend:
-    build:
+    build: 
       context: ./backend
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
+    container_name: studybuddy-backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     env_file:
       - ./backend/.env
     volumes:
-      - ./backend/uploads:/app/uploads
-      - ./backend/chroma_db:/app/chroma_db
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - chroma_data:/app/chroma_db
+      - manim_videos:/app/videos
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile
+    container_name: studybuddy-frontend
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    env_file:
-      - ./frontend/.env.local
+      - "5173:80"
     depends_on:
       - backend
-    restart: unless-stopped
+
+volumes:
+  chroma_data:
+    name: studybuddy_chroma_data
+  manim_videos:
+    name: studybuddy_manim_videos

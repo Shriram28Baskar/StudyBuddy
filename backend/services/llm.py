@@ -4,6 +4,7 @@ from typing import Optional, List, Dict
 from groq import Groq
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception, retry_if_exception_type
 from dotenv import load_dotenv
+from utils.json_helper import extract_json_object
 
 load_dotenv()
 
@@ -52,143 +53,21 @@ Be concise, encouraging, and accurate."""
 
 def build_rag_prompt(context_chunks: List[str], question: str) -> str:
     context = "\n\n---\n\n".join(context_chunks)
-    return f"""You are a document analysis assistant. Answer the user's question using ONLY the provided document excerpts below.
+    return f"""You are a helpful educational document assistant. Answer the user's question based on the provided document excerpts.
 
-If the answer is not found in the excerpts, say "I couldn't find that in the document."
+If the user asks for code, algorithms, explanations, or step-by-step breakdowns of concepts found in the document, you should provide both the code (wrapped in code blocks) and a clear step-by-step description of the algorithm/process, even if the retrieved text only contains the code.
 
-Document excerpts:
+CRITICAL FORMATTING RULES — you MUST follow these exactly:
+1. Output ONLY the final answer. Do NOT include any attribution phrases like "According to the document...", "Based on the excerpt...", "The document states...", "From the passage...", "Extracted from...", or any similar provenance text.
+2. If the answer contains code or pseudocode, wrap it in a proper markdown code block with the correct language tag and preserve indentation.
+3. If the answer is a list of steps or items, format it as a proper ordered or unordered markdown list.
+4. If the answer is prose, write it in clean, readable paragraphs.
+5. If the concept or code is not found in the excerpts at all, respond only with: "I couldn't find that in the document."
+
+Document excerpts (use these as your knowledge source, but do not reference them directly):
 {context}
 
-Question: {question}
-
-Answer clearly and cite which part of the document supports your answer."""
-
-
-def build_studyplan_prompt(exam: str, subjects: List[str], hours: float, days: int) -> str:
-    subjects_str = ", ".join(subjects)
-    return f"""You are an expert academic planner. Create a detailed {days}-day study plan.
-
-Details:
-- Exam/Goal: {exam}
-- Subjects: {subjects_str}
-- Study hours per day: {hours}
-
-Return ONLY valid JSON in this exact format, no explanation:
-{{
-  "plan": [
-    {{
-      "day": "Day 1",
-      "date": "Mon",
-      "tasks": [
-        {{"subject": "Math", "topic": "Algebra basics", "hours": 2}},
-        {{"subject": "Physics", "topic": "Kinematics", "hours": 2}}
-      ]
-    }}
-  ],
-  "summary": "Brief overview of the plan strategy"
-}}
-
-Distribute subjects evenly. Total hours per day must equal {hours}. Generate exactly {days} days."""
-
-
-def build_mindmap_prompt(topic: str) -> str:
-    return f"""Generate a comprehensive mind map for the topic: "{topic}"
-
-Return ONLY valid JSON in this exact format, no explanation:
-{{
-  "topic": "{topic}",
-  "nodes": [
-    {{
-      "name": "Main concept 1",
-      "children": ["subtopic a", "subtopic b", "subtopic c"]
-    }}
-  ]
-}}
-
-Include 5-7 main nodes, each with 3-5 children. Make it academically accurate."""
-
-
-def build_roadmap_prompt(goal: str, serp_data: str) -> str:
-    return f"""You are a world-class career and learning advisor. Your job is to create an extremely detailed, actionable learning roadmap.
-
-Goal: {goal}
-
-Relevant market data from web search:
-{serp_data}
-
-Return ONLY valid JSON in this exact format, no markdown, no explanation:
-{{
-  "goal": "{goal}",
-  "estimatedTime": "X-Y weeks",
-  "phases": [
-    {{
-      "phase": "Step 1",
-      "title": "Descriptive Phase Title",
-      "duration": "X weeks",
-      "description": "A detailed 2-3 sentence paragraph explaining WHAT the learner will study in this phase, WHY it matters, and HOW it connects to their overall goal. Be specific and motivating.",
-      "skills": ["Specific Skill 1", "Specific Skill 2", "Specific Skill 3", "Specific Skill 4", "Specific Skill 5"],
-      "resources": [
-        {{
-          "title": "Full Resource Name (Platform or Author)",
-          "url": "https://actual-url.com",
-          "type": "course",
-          "description": "One sentence on why this resource is recommended"
-        }},
-        {{
-          "title": "Book Title by Author Name",
-          "url": "",
-          "type": "book",
-          "description": "One sentence on why this resource is recommended"
-        }},
-        {{
-          "title": "YouTube Channel or Video Name",
-          "url": "https://youtube.com/...",
-          "type": "video",
-          "description": "One sentence on why this resource is recommended"
-        }}
-      ]
-    }}
-  ]
-}}
-
-STRICT REQUIREMENTS:
-- Generate exactly 6 phases that form a complete, progressive learning journey
-- Each phase MUST have a "description" field with 2-3 detailed sentences (minimum 40 words)
-- Each phase MUST have exactly 4-6 skills (specific, not generic)
-- Each phase MUST have exactly 3 resources with real, well-known names
-- Resources must be a mix of types: course, book, video, documentation, website
-- "estimatedTime" must be a total like "16-24 weeks" summing all phases
-- Phase titles must be specific to the goal "{goal}", not generic
-- Skills must be concrete and learnable (e.g. "NumPy array operations" not just "Python")
-- Resource titles must be real, well-known resources (Coursera, edX, O'Reilly books, YouTube channels, official docs)
-- DO NOT use placeholder text like "resource1" or "skill1"
-- The progression must go: Fundamentals → Core Concepts → Intermediate Skills → Advanced Topics → Real Projects → Mastery/Optimization"""
-
-
-def build_career_prompt(skills: List[str], interests: List[str], serp_data: str) -> str:
-    return f"""You are a career counselor with deep knowledge of tech and non-tech industries.
-
-User profile:
-- Skills: {", ".join(skills)}
-- Interests: {", ".join(interests)}
-
-Market data from web search:
-{serp_data}
-
-Return ONLY valid JSON in this exact format, no explanation:
-{{
-  "roles": [
-    {{
-      "title": "Role title",
-      "salary": "$80,000 - $120,000",
-      "match": 85,
-      "skills": ["required skill 1", "required skill 2"],
-      "nextStep": "Concrete action to pursue this role"
-    }}
-  ]
-}}
-
-Return 4 distinct career roles ranked by match percentage (0-100)."""
+Question: {question}"""
 
 
 @retry(
@@ -249,12 +128,324 @@ async def complete_with_history(
 
 
 def parse_json_response(text: str) -> Optional[dict]:
-    import json, re
-    text = re.sub(r"```(?:json)?\s*", "", text).strip().rstrip("```").strip()
-    match = re.search(r"\{[\s\S]*\}", text)
-    if not match:
-        return None
     try:
-        return json.loads(match.group())
-    except json.JSONDecodeError:
+        return extract_json_object(text, label="llm response")
+    except ValueError:
         return None
+
+
+async def complete_with_vision(
+    image_b64: str,
+    prompt: str,
+    image_media_type: str = "image/jpeg",
+    max_tokens: int = 1000,
+) -> str:
+    """
+    Send a single image + text prompt to Groq's vision model.
+    Uses GROQ_VISION_MODEL env var (default: meta-llama/llama-4-scout-17b-16e-instruct).
+    """
+    VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+    client = get_client()
+
+    def _sync_call():
+        return client.chat.completions.create(
+            model=VISION_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{image_media_type};base64,{image_b64}"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": prompt
+                        }
+                    ]
+                }
+            ],
+            max_tokens=max_tokens,
+        )
+
+    response = await asyncio.to_thread(_sync_call)
+    return response.choices[0].message.content
+
+
+@retry(
+    stop=stop_after_attempt(4),
+    wait=wait_exponential(multiplier=2, min=4, max=60),
+    retry=retry_if_exception(should_retry)
+)
+async def complete_with_vision_multimodal(
+    text_context: List[str],
+    images: List[dict],
+    question: str,
+    intent: str = "document_qa",
+    max_tokens: int = 2000,
+) -> str:
+    """
+    Vision-grounded multimodal reasoning.
+
+    Passes the actual extracted images (base64) together with retrieved
+    document text into the vision LLM. The model reasons over both the
+    document text AND the actual uploaded diagrams/figures.
+
+    Args:
+        text_context: retrieved text chunks from the document
+        images: list of dicts with keys:
+            {
+              "b64": str,           # base64-encoded image bytes
+              "media_type": str,    # "image/png" or "image/jpeg"
+              "caption": str,       # rich description for reference
+              "page": int,          # page number in document
+              "type": str,          # e.g. "weighted_graph"
+            }
+        question: the student's original question
+        max_tokens: max response length
+    """
+    VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+    client = get_client()
+
+    image_types = list({img["type"] for img in images})
+    system_prompt = build_multimodal_rag_prompt(text_context, images, question, intent, image_types)
+
+    # Build multipart user message: images first, then question text
+    user_content = []
+    for img in images:
+        user_content.append({
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:{img['media_type']};base64,{img['b64']}"
+            }
+        })
+    user_content.append({
+        "type": "text",
+        "text": f"Question: {question}"
+    })
+
+    def _sync_call():
+        return client.chat.completions.create(
+            model=VISION_MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+            ],
+            max_tokens=max_tokens,
+        )
+
+    response = await asyncio.to_thread(_sync_call)
+    return response.choices[0].message.content
+
+
+def _get_template_instructions(intent: str, image_types: List[str]) -> str:
+    """Determine the appropriate educational template based on intent and visual evidence."""
+    template_type = "theory"
+    
+    # Map intent to base template
+    if intent in ["algorithm", "programming"]:
+        template_type = "algorithm"
+    elif intent in ["diagram", "design"]:
+        template_type = "diagram"
+    elif intent in ["numerical", "equation"]:
+        template_type = "numerical"
+        
+    # Visual evidence overrides or enhances
+    if "flowchart" in image_types:
+        template_type = "algorithm"
+    elif any(t in image_types for t in ["weighted_graph", "architecture_diagram", "uml", "er_diagram", "circuit_diagram"]):
+        if template_type == "theory":
+            template_type = "diagram"
+            
+    instructions = ""
+    
+    if template_type == "theory":
+        instructions = """
+Use the following structured template for your response:
+### Definition
+(A concise definition of the core concept)
+### Explanation
+(A detailed explanation based on the text)
+"""
+        if any(t in image_types for t in ["weighted_graph", "architecture_diagram", "uml", "er_diagram", "circuit_diagram", "screenshot", "other"]):
+            instructions += "### Diagram Explanation\n(MANDATORY: Describe the components in the provided diagram, and explain how they interact. Explicitly reference the diagram's page number.)\n"
+        if "table" in image_types:
+            instructions += "### Table Explanation\n(MANDATORY: Summarize the provided table, explain its columns, and explain why it matters. Explicitly reference the table's page number.)\n"
+        instructions += """### Key Points
+(Bullet points of crucial information)
+### Applications / Examples
+(If mentioned in the text)
+### Exam Tips / Revision Notes
+(A brief summary for quick review)
+"""
+    elif template_type == "diagram":
+        instructions = """
+Use the following structured template for your response:
+### Diagram Overview
+(High-level summary of what the diagram represents)
+### Component-by-Component Explanation
+(Detailed breakdown of the elements, blocks, or nodes shown in the diagram)
+### Working Principle / Interaction
+(How the components interact or the process flows)
+### Labels & Details
+(Any specific values, labels, or equations present in the diagram)
+### Applications
+(Where this is used, based on the text)
+### Exam Tips
+(Key takeaways for exams)
+"""
+    elif template_type == "algorithm":
+        instructions = """
+Use the following structured template for your response:
+### Idea
+(The core concept of the algorithm or process)
+"""
+        if "flowchart" in image_types:
+            instructions += "### Flowchart Walkthrough\n(MANDATORY: Convert the flowchart into step-by-step reasoning. Format as:\nStep 1\n↓\nStep 2\n↓\nDecision\n...)\n"
+        
+        instructions += """### Algorithm Steps
+(Step-by-step breakdown)
+### Complexity
+(Time and space complexity, if mentioned)
+### Example / Dry Run
+(If provided in the text or diagram)
+"""
+    elif template_type == "numerical":
+        instructions = """
+Use the following structured template for your response:
+### Given
+(Extract all given values and conditions)
+### Find
+(What needs to be calculated)
+### Formula
+(The relevant mathematical expressions)
+"""
+        if "equation" in image_types:
+            instructions += "### Equation Explanation\n(MANDATORY: Explain every symbol in the provided equation image, derive when appropriate, and explain its usage.)\n"
+        
+        instructions += """### Solution
+(Step-by-step substitution and calculation)
+### Final Answer
+(The final result)
+"""
+
+    return instructions
+
+
+def build_multimodal_rag_prompt(
+    context_chunks: List[str],
+    images: List[dict],
+    question: str,
+    intent: str,
+    image_types: List[str],
+) -> str:
+    """
+    System prompt for vision-grounded multimodal reasoning.
+    Informs the LLM about available document text AND the actual diagrams.
+    """
+    context = "\n\n---\n\n".join(context_chunks)
+
+    image_annotations = ""
+    if images:
+        lines = []
+        for i, img in enumerate(images, 1):
+            lines.append(
+                f"  Image {i} — Page {img['page']}, Type: {img['type']}\n"
+                f"  Description: {img['caption']}"
+            )
+        image_annotations = "\n\nAvailable diagrams/figures from the document:\n" + "\n".join(lines)
+
+    template_instructions = _get_template_instructions(intent, image_types)
+
+    return f"""You are an expert academic tutor. You are explaining concepts to a student using THEIR uploaded document. You have access to both extracted text and actual diagrams/figures.
+
+CRITICAL RULES:
+1. DO NOT HALLUCINATE: Never invent diagrams, tables, examples, register names, graphs, or circuit values. If the information is not present in the document, state explicitly: "I couldn't find that in the document."
+2. GROUND EVERY VISUAL EXPLANATION: When explaining a visual, you MUST explicitly cite it. Examples: "According to the diagram on Page 4...", "The table on Page 7 shows...", "Figure 3 illustrates...".
+3. EXPLAIN RETRIEVED FIGURES: You must actively explain the visual elements provided to you. Do not ignore them.
+4. If code is needed, use markdown code blocks.
+
+{template_instructions}
+
+Document text excerpts:
+{context}
+{image_annotations}"""
+
+
+def build_rag_prompt(context_chunks: List[str], question: str, intent: str = "document_qa") -> str:
+    """Text-only RAG system prompt."""
+    context = "\n\n---\n\n".join(context_chunks)
+    template_instructions = _get_template_instructions(intent, [])
+    
+    return f"""You are an expert academic tutor. You are explaining concepts to a student using THEIR uploaded document text.
+
+CRITICAL RULES:
+1. DO NOT HALLUCINATE: Never invent examples, values, or diagrams. If the information is not present in the document, state explicitly: "I couldn't find that in the document."
+2. GROUND YOUR ANSWER: Explain the concepts based ONLY on the provided document excerpts. Do not use generic prior knowledge that contradicts or goes beyond the text.
+3. Output clean markdown.
+
+{template_instructions}
+
+Document excerpts (use these as your knowledge source, but do not reference them directly as 'excerpts'):
+{context}
+
+Question: {question}"""
+
+
+def sample_text(text: str, target_len: int = 8000, prefix_len: int = 3000, num_segments: int = 10) -> str:
+    """
+    Samples text to fit within target_len.
+    Always includes the first prefix_len characters in full,
+    and then samples num_segments evenly spaced chunks from the remaining text.
+    """
+    if len(text) <= target_len:
+        return text
+
+    prefix = text[:prefix_len]
+    remaining_text = text[prefix_len:]
+
+    remaining_target_len = target_len - prefix_len
+    if remaining_target_len <= 0:
+        return prefix
+
+    segment_size = len(remaining_text) // num_segments
+    chunk_size = remaining_target_len // num_segments
+
+    if segment_size <= chunk_size:
+        return prefix + "\n\n... [section transition] ...\n\n" + remaining_text
+
+    chunks = [prefix]
+    for i in range(num_segments):
+        start = i * segment_size
+        chunk = remaining_text[start : start + chunk_size].strip()
+        if chunk:
+            chunks.append(chunk)
+
+    return "\n\n... [section transition] ...\n\n".join(chunks)
+
+
+def build_topics_extraction_prompt(text: str) -> str:
+    # Since this is an f-string, literal curly braces must be doubled.
+    sampled = sample_text(text)
+    return f"""You are an expert academic curriculum designer. Analyze the following document text and extract exactly 5 major study topics.
+For each topic, provide:
+1. A clear, concise title.
+2. A short description (1-2 sentences) of what is covered.
+3. A list of 3-5 specific subtopics or key concepts (as tags).
+
+Document text snippet:
+{sampled}
+
+Return ONLY valid JSON in this exact format:
+{{
+  "topics": [
+    {{
+      "title": "Topic Title",
+      "description": "Short description of the topic.",
+      "subtopics": ["Subtopic 1", "Subtopic 2", "Subtopic 3"]
+    }}
+  ]
+}}
+"""

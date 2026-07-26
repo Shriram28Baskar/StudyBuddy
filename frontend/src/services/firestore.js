@@ -19,6 +19,8 @@ import {
   Timestamp,
 } from 'firebase/firestore'
 
+import { getStorage } from 'firebase/storage'
+
 // ── Firestore instance (reuses the app initialised in auth.js) ────────
 const app = getApps().length === 0
   ? initializeApp({
@@ -32,7 +34,8 @@ const app = getApps().length === 0
   : getApp()
 
 const db = getFirestore(app)
-export { db }
+const storage = getStorage(app)
+export { db, storage }
 
 // ── Utility: convert Firestore doc → plain JS object ─────────────────
 function docToObj(docSnap) {
@@ -333,4 +336,44 @@ export const roadmapsDB = {
   delete: async (roadmapId) => {
     await deleteDoc(doc(db, 'roadmaps', roadmapId))
   },
+}
+
+// ── Clan Messages ─────────────────────────────────────────────────────
+export const clanMessagesDB = {
+  send: async (clanId, msg) => {
+    const ref = collection(db, 'clans', clanId, 'messages')
+    const docRef = await addDoc(ref, {
+      ...msg,
+      createdAt: serverTimestamp(),
+    })
+    return docRef.id
+  },
+  subscribe: (clanId, callback, limitCount = 50) => {
+    const q = query(
+      collection(db, 'clans', clanId, 'messages'),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
+    return onSnapshot(q, (snap) => {
+      // Reverse so messages show in chronological order in the chat UI
+      const messages = docsToArr(snap).reverse()
+      callback(messages)
+    })
+  },
+  delete: async (clanId, messageId) => {
+    await deleteDoc(doc(db, 'clans', clanId, 'messages', messageId))
+  }
+}
+
+// ── Notifications ─────────────────────────────────────────────────────
+export const notificationsDB = {
+  subscribe: (userId, callback, limitCount = 50) => {
+    const q = query(
+      collection(db, 'notifications'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
+    return onSnapshot(q, (snap) => callback(docsToArr(snap)))
+  }
 }

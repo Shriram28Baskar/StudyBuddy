@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import useAppStore from '@/store/useAppStore'
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+import { studyPlanAIAPI } from '../services/api'
 const WEEK_COLORS   = ['#9b6dff','#5bbdff','#ff9b5b','#5bff9b','#ff5b9b','#ffdb5b','#5bdfff','#ff6b6b','#a8ff78','#ffd89b','#96fbc4','#f093fb']
 const PRIORITY_COLOR = { high:'#ff5b5b', medium:'#ffdb5b', low:'#5bff9b' }
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
@@ -314,16 +313,22 @@ export function PlanView({ plan: initialPlan, planId: initialPlanId }) {
   // Save progress to Firebase when tasks change
   useEffect(() => {
     if (!planId) return
-    const total = Object.keys(progress).length
-    const done  = Object.values(progress).filter(Boolean).length
-    const pct   = total>0 ? (done/total)*100 : 0
+    let total = 0
+    let done = 0
+    plan?.weeks?.forEach((w, wi) => {
+      Object.entries(w.daily_tasks || {}).forEach(([day, tasks]) => {
+        tasks.forEach((_, ti) => {
+          total++
+          if (progress[`w${wi}_${day}_${ti}`]) done++
+        })
+      })
+    })
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0
     const allScores = Object.entries(scores).map(([k,v]) => ({
       week: parseInt(k.replace('week_',''))+1, score: v.correct, total: v.total
     }))
-    fetch(`${API_BASE}/generate-study-plan/${planId}/progress`, {
-      method:'PATCH', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ plan_id:planId, completed_tasks:progress, test_scores:allScores, completion_pct:pct }),
-    }).catch(()=>{})
+    studyPlanAIAPI.updateProgress(planId, { completedTasks: progress, testScores: allScores, completionPct: pct })
+      .catch(()=>{})
   }, [progress, planId])
 
   // Handle test submission — save score + trigger adaptation
@@ -338,8 +343,7 @@ export function PlanView({ plan: initialPlan, planId: initialPlanId }) {
     if (!planId) return
     setAdapting(true); setAdaptMsg(null)
     try {
-      const res = await fetch(`${API_BASE}/generate-study-plan/${planId}/adapt`, { method:'POST' })
-      const data = await res.json()
+      const { data } = await studyPlanAIAPI.adapt(planId)
       if (data.adapted) {
         setInsights(data.insights)
         setAdaptMsg(data.message)
@@ -478,12 +482,7 @@ export default function StudyPlanAI() {
     if (!topic.trim()) { setError('Enter a topic first.'); return }
     setLoading(true); setError(null); setPlan(null)
     try {
-      const res = await fetch(`${API_BASE}/generate-study-plan`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ topic:topic.trim(), duration_weeks:weeks, user_id:userId }),
-      })
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail??`Error ${res.status}`) }
-      const data = await res.json()
+      const { data } = await studyPlanAIAPI.generate({ topic: topic.trim(), durationWeeks: weeks, userId })
       setPlan(data)
       showToast?.(`${weeks}-week plan generated!`, 'success')
     } catch (err) { setError(err.message) }
@@ -497,7 +496,7 @@ export default function StudyPlanAI() {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:28 }}>
         <div>
           <h1 style={{ fontFamily:'"DM Serif Display",Georgia,serif', fontWeight:400, fontSize:28, color:'#e8e4f0', marginBottom:4 }}>Study Plan Generator</h1>
-          <p style={{ color:'#555', fontSize:13 }}>AI-powered adaptive weekly plan — learns from your performance.</p>
+          <p style={{ color:'#555', fontSize:13 }}>AI-powered personalized weekly study plan with curated resources.</p>
         </div>
         {userId && (
           <button onClick={() => navigate('/studyplan/history')}

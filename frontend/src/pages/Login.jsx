@@ -265,7 +265,7 @@ export default function Login() {
             }}>not harder.</span>
           </h2>
           <p style={{ fontSize: 13, color: '#4a4a62', lineHeight: 1.7, margin: '0 0 36px' }}>
-            Adaptive AI that learns your weak spots and builds a study plan around your schedule.
+            AI-powered study plans with performance tracking and curated resources for every topic.
           </p>
 
           {/* Feature list */}
