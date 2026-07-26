@@ -3,6 +3,7 @@
 # ==================================================
 .idea/
 .vscode/
+.agents/
 *.iml
 *.swp
 *.swo
@@ -66,6 +67,8 @@ frontend/out/
 # ChromaDB / Vector Stores
 # ==================================================
 backend/chroma_db/
+chroma_db/
+*.sqlite3
 
 # ==================================================
 # Generated Content
