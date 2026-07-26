@@ -13,7 +13,6 @@ services:
       - ./backend/.env
     volumes:
       - chroma_data:/app/chroma_db
-      - manim_videos:/app/videos
 
   frontend:
     build:
@@ -29,5 +28,3 @@ services:
 volumes:
   chroma_data:
     name: studybuddy_chroma_data
-  manim_videos:
-    name: studybuddy_manim_videos
