@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧠 StudyBuddy
+# StudyBuddy
 
 ### AI-Powered Personal Learning Brain
 
@@ -10,7 +10,6 @@
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **StudyBuddy** transforms the way students learn by combining Retrieval-Augmented Generation (RAG), adaptive AI planning, real-time collaboration, and intelligent performance analytics into one cohesive platform.
 
@@ -18,23 +17,23 @@
 
 ---
 
-## 📖 Table of Contents
+## Table of Contents
 
-- [Overview](#-overview)
-- [Feature Showcase](#-feature-showcase)
-- [Technology Stack](#-technology-stack)
-- [Architecture](#-architecture)
-- [Repository Structure](#-repository-structure)
-- [Quick Start](#-quick-start)
-- [Environment Configuration](#-environment-configuration)
-- [Running Tests](#-running-tests)
-- [Engineering Highlights](#-engineering-highlights)
-- [Documentation](#-documentation)
-- [License](#-license)
+- [Overview](#overview)
+- [Feature Showcase](#feature-showcase)
+- [Technology Stack](#technology-stack)
+- [Architecture](#architecture)
+- [Repository Structure](#repository-structure)
+- [Quick Start](#quick-start)
+- [Environment Configuration](#environment-configuration)
+- [Running Tests](#running-tests)
+- [Engineering Highlights](#engineering-highlights)
+- [Documentation](#documentation)
+- [License](#license)
 
 ---
 
-## 🌟 Overview
+## Overview
 
 **The Problem:** Traditional studying is passive and disconnected. Students read textbooks without assessment, struggle to identify weak areas, and have no intelligent system to guide their learning path over time.
 
@@ -50,9 +49,9 @@ This project was architected to demonstrate **senior-level software engineering*
 
 ---
 
-## ✨ Feature Showcase
+## Feature Showcase
 
-### 🎯 AI-Powered Core
+### AI-Powered Core
 
 | Feature | Description |
 |---|---|
@@ -63,7 +62,7 @@ This project was architected to demonstrate **senior-level software engineering*
 | **Score Predictor** | Input your performance metrics and confidence ratings across topics. The AI returns a predicted score range with subject-level breakdowns and key recommendations. |
 | **Burnout Detector** | A multi-factor questionnaire-based analysis. The AI evaluates your responses and returns a personalized burnout risk level with actionable recommendations. |
 
-### 🛠️ AI Solvers
+### AI Solvers
 
 | Feature | Description |
 |---|---|
@@ -71,7 +70,7 @@ This project was architected to demonstrate **senior-level software engineering*
 | **Voice Solver** | Ask academic questions via voice. The system uses speech recognition, processes the query through the AI tutor, and responds with text-to-speech synthesis. |
 | **Universal AI Tutor (Chat)** | A context-aware chat interface backed by Groq's LLM inference. Supports math rendering via KaTeX and Markdown for rich responses. |
 
-### 🤝 Social & Collaboration
+### Social & Collaboration
 
 | Feature | Description |
 |---|---|
@@ -81,7 +80,7 @@ This project was architected to demonstrate **senior-level software engineering*
 | **Friends & Notifications** | Add friends, manage friend requests, and receive real-time system notifications. |
 | **Community** | A community feed and discovery page for finding study partners. |
 
-### 📊 Analytics & Progress
+### Analytics & Progress
 
 | Feature | Description |
 |---|---|
@@ -91,9 +90,10 @@ This project was architected to demonstrate **senior-level software engineering*
 
 ---
 
-## 💻 Technology Stack
+## Technology Stack
 
 ### Frontend
+
 | Technology | Purpose |
 |---|---|
 | **React 18** (Vite) | Core SPA framework with fast HMR during development |
@@ -110,6 +110,7 @@ This project was architected to demonstrate **senior-level software engineering*
 | **Vitest + Testing Library** | Automated unit and component testing |
 
 ### Backend
+
 | Technology | Purpose |
 |---|---|
 | **FastAPI** | Async Python web framework with automatic OpenAPI docs |
@@ -123,6 +124,7 @@ This project was architected to demonstrate **senior-level software engineering*
 | **Pytest** | Backend integration testing |
 
 ### Infrastructure
+
 | Technology | Purpose |
 |---|---|
 | **Firebase Auth + Firestore** | Authentication (JWT verification) and persistent user data |
@@ -132,7 +134,7 @@ This project was architected to demonstrate **senior-level software engineering*
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 StudyBuddy uses a clean, decoupled architecture with strict separation between layers.
 
@@ -141,23 +143,23 @@ StudyBuddy uses a clean, decoupled architecture with strict separation between l
 │                    Client Browser                    │
 │               React SPA (Vite Build)                 │
 └───────────────────────┬──────────────────────────────┘
-                        │ HTTP / WebSocket
-                        ▼
+                         │ HTTP / WebSocket
+                         ▼
 ┌──────────────────────────────────────────────────────┐
 │                 Nginx Reverse Proxy                  │
 │  • Serves static Vite build                          │
 │  • Proxies /api/* → FastAPI backend                  │
 └───────────────────────┬──────────────────────────────┘
-                        │
-                        ▼
+                         │
+                         ▼
 ┌──────────────────────────────────────────────────────┐
 │              FastAPI Backend (Python)                │
-│  ┌─────────────┐  ┌──────────────┐  ┌────────────┐  │
-│  │  Middleware  │  │   Routers    │  │  Services  │  │
-│  │ Firebase JWT│  │ (HTTP + WS)  │  │ (Business  │  │
-│  │ Validation  │  │ 18 endpoints │  │  Logic)    │  │
-│  └─────────────┘  └──────────────┘  └────────────┘  │
-└──────┬──────────────────────────────────┬────────────┘
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────┐   │
+│  │  Middleware │  │   Routers    │  │  Services  │   │
+│  │ Firebase JWT│  │ (HTTP + WS)  │  │ (Business  │   │
+│  │ Validation  │  │ 18 endpoints │  │  Logic)    │   │
+│  └─────────────┘  └──────────────┘  └────────────┘   │
+└──────┬──────────────────────────────────┬─────────────┘
        │                                  │
        ▼                                  ▼
 ┌──────────────┐                 ┌────────────────────┐
@@ -188,7 +190,7 @@ utils/         → Shared helper utilities.
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 StudyBuddy/
@@ -294,7 +296,7 @@ StudyBuddy/
 │   ├── DEVELOPMENT.md                # Local setup and coding conventions
 │   ├── DEPLOYMENT.md                 # Docker and production deployment guide
 │   ├── CONTRIBUTING.md               # Branching, testing, and PR guidelines
-│   └── RELEASE_NOTES.md             # Version history and changelog
+│   └── RELEASE_NOTES.md              # Version history and changelog
 ├── docker-compose.yml                # Full-stack container orchestration
 ├── .gitignore
 └── DOCKER_SETUP.md                   # Supplementary Docker setup guide
@@ -302,7 +304,7 @@ StudyBuddy/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 The fastest way to run StudyBuddy is via **Docker Compose**.
 
@@ -353,7 +355,7 @@ docker compose up -d --build
 
 ---
 
-## ⚙️ Environment Configuration
+## Environment Configuration
 
 All secrets are managed server-side. The frontend has **zero client-side API keys**.
 
@@ -361,11 +363,11 @@ All secrets are managed server-side. The frontend has **zero client-side API key
 
 | Variable | Required | Description |
 |---|---|---|
-| `GROQ_API_KEY` | ✅ | Groq API key for LLM inference |
-| `FIREBASE_SERVICE_ACCOUNT_PATH` | ✅ | Path to your Firebase service account JSON |
-| `ALLOWED_ORIGINS` | ✅ | Comma-separated list of allowed CORS origins |
-| `SERPAPI_KEY` | ⚡ Optional | SerpAPI key for web search augmentation |
-| `UPLOAD_DIR` | ⚡ Optional | Override for file upload directory (default: `./uploads`) |
+| `GROQ_API_KEY` | Yes | Groq API key for LLM inference |
+| `FIREBASE_SERVICE_ACCOUNT_PATH` | Yes | Path to your Firebase service account JSON |
+| `ALLOWED_ORIGINS` | Yes | Comma-separated list of allowed CORS origins |
+| `SERPAPI_KEY` | Optional | SerpAPI key for web search augmentation |
+| `UPLOAD_DIR` | Optional | Override for file upload directory (default: `./uploads`) |
 
 See `backend/.env.example` for the complete template.
 
@@ -382,7 +384,7 @@ VITE_FIREBASE_PROJECT_ID=...
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 ### Backend (Pytest)
 
@@ -402,48 +404,52 @@ Both test suites are automatically executed on every push to `main` via GitHub A
 
 ---
 
-## 🛡️ Engineering Highlights
+## Engineering Highlights
 
 This project is designed to demonstrate **production-grade software engineering** beyond typical portfolio work.
 
 ### Security
+
 - **Zero Client-Side Secrets:** All LLM API keys reside exclusively on the backend. The frontend holds only Firebase public SDK config.
 - **Global Auth Enforcement:** `verify_firebase_token` middleware is applied at the router level — not per-endpoint — making it impossible to accidentally miss an unprotected route.
 - **WebSocket Authentication:** Real-time WebSocket handlers use a dedicated `verify_ws_token()` helper since the browser WebSocket API cannot send custom `Authorization` headers.
 
 ### Architecture & Code Quality
+
 - **Strict Separation of Concerns:** HTTP routers are deliberately kept thin — they parse inputs and return responses. All AI orchestration, analytics, and data logic lives in the `services/` layer.
 - **Production RAG Pipeline:** Implements chunked text extraction, persistent vector storage (ChromaDB), and semantic retrieval with multi-format document support (PDF, DOCX, PPTX, XLSX).
-- **Adaptive AI Engine:** The `study_plan_engine.py` service decoupled from HTTP concerns — it can be tested and extended in isolation.
+- **Adaptive AI Engine:** The `study_plan_engine.py` service is decoupled from HTTP concerns — it can be tested and extended in isolation.
 - **Retry Resilience:** All external API calls (Groq, SerpAPI) use `tenacity` with exponential backoff.
 - **Background Cleanup:** Long-lived WebSocket room cleanup tasks run as async background coroutines and are properly cancelled on application shutdown.
 
 ### CI/CD & Testing
+
 - **GitHub Actions Pipeline:** Every push to `main` triggers automated Python tests and a Vite production build validation.
 - **Automated Frontend Tests:** Vitest + React Testing Library validates Zustand store behavior.
 - **Pytest Integration Tests:** Backend route contracts are validated via integration tests.
 
 ### Developer Experience
+
 - **One-Command Setup:** `docker compose up -d --build` spins up the entire stack.
 - **Auto-Generated API Docs:** FastAPI produces interactive Swagger UI at `/docs`.
 - **Type-Safe Schemas:** Pydantic v2 enforces input and output contracts on all endpoints.
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 | Document | Description |
 |---|---|
-| 🏛️ [Architecture Overview](docs/ARCHITECTURE.md) | System design, Mermaid diagrams, RAG pipeline, and adaptive engine flow |
-| 🔌 [API Reference](docs/API_REFERENCE.md) | Authentication details and endpoint usage guide |
-| 💻 [Development Guide](docs/DEVELOPMENT.md) | Local setup, repository structure, and coding conventions |
-| 🚢 [Deployment Guide](docs/DEPLOYMENT.md) | Docker Compose details and production deployment steps |
-| 🤝 [Contributing](docs/CONTRIBUTING.md) | Branching strategy, testing requirements, and PR guidelines |
-| 📝 [Release Notes](docs/RELEASE_NOTES.md) | Version history and changelog |
+| [Architecture Overview](docs/ARCHITECTURE.md) | System design, Mermaid diagrams, RAG pipeline, and adaptive engine flow |
+| [API Reference](docs/API_REFERENCE.md) | Authentication details and endpoint usage guide |
+| [Development Guide](docs/DEVELOPMENT.md) | Local setup, repository structure, and coding conventions |
+| [Deployment Guide](docs/DEPLOYMENT.md) | Docker Compose details and production deployment steps |
+| [Contributing](docs/CONTRIBUTING.md) | Branching strategy, testing requirements, and PR guidelines |
+| [Release Notes](docs/RELEASE_NOTES.md) | Version history and changelog |
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
@@ -451,6 +457,6 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 <div align="center">
 
-Built with ❤️ as a flagship portfolio project demonstrating senior-level full-stack AI engineering.
+Built as a flagship portfolio project demonstrating senior-level full-stack AI engineering.
 
 </div>
